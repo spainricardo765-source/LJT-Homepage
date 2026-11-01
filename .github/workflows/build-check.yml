@@ -64,7 +64,7 @@ jobs:
           for wrong in ["Your Name", "Your Sidebar Name", "GitHub University", "Paper Title Number", "Red Brick University"]:
               assert wrong not in about, "Template placeholder found: " + wrong
               assert wrong not in pubs, "Template placeholder found: " + wrong
-          detail_pages = list((root / "publication").glob("*/index.html"))
+          detail_pages = list((root / "publication").glob("*/index.html")) + list((root / "publication").glob("*.html"))
           assert len(detail_pages) == 6, "Expected 6 publication pages, got %d" % len(detail_pages)
           expected = [
               (r"Published in\s*<i>Arxiv</i>,\s*2025", 2),
