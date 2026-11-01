@@ -216,6 +216,7 @@ collections:
   publications:
     output: true
     permalink: /:collection/:path/
+    sort_by: publication_year
   portfolio:
     output: true
     permalink: /:collection/:path/
@@ -315,8 +316,8 @@ whitelist:
 
 # Archives
 #  Type
-#  - GitHub Pages compatible archive pages built with Liquid ~> type: liquid (default)
-#  - Jekyll Archives plugin archive pages ~> type: jekyll-archives
+#  - GitHub Pages compatible archive pages built with Liquid ~>
+#  - Jekyll Archives plugin archive pages ~>
 #  Path (examples)
 #  - Archive page should exist at path when using Liquid method or you can
 #    expect broken links (especially with breadcrumbs enabled)
