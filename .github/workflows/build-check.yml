@@ -1,0 +1,81 @@
+name: Build check
+
+on:
+  workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+      - name: Install UglifyJS
+        run: npm install -g uglify-js
+      - name: Minify JS files
+        run: uglifyjs assets/js/plugins/jquery.greedy-navigation.js assets/js/_main.js assets/js/theme.js -c -m -o assets/js/main.min.js
+      - name: Build with Jekyll
+        run: bundle exec jekyll build --baseurl "/LJT-Homepage"
+        env:
+          JEKYLL_ENV: production
+      - name: Check rendered content
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          root = Path("_site")
+          about = (root / "index.html").read_text()
+          pubs = (root / "publications" / "index.html").read_text()
+          titles = [
+              "SynLogic: Synthesizing Verifiable Reasoning Data at Scale for Learning Logical Reasoning and Beyond",
+              "On the Perception Bottleneck of VLMs for Chart Understanding",
+              "On the Universal Truthfulness Hyperplane Inside LLMs",
+              "In-Context Sharpness as Alerts: An Inner Representation Perspective for Hallucination Mitigation",
+              "C-Eval: A Multi-Level Multi-Discipline Chinese Evaluation Suite for Foundation Models",
+              "Composing Parameter-Efficient Modules with Arithmetic Operations",
+          ]
+          for title in titles:
+              assert title in about, "Missing in about: " + title
+              assert title in pubs, "Missing on publications page: " + title
+          for fact in [
+              "jliugi@connect.ust.hk",
+              "https://github.com/Vicent0205",
+              "junteng88716710",
+              "Zhiyuan Honor Scholarship",
+              "MINIMAX",
+              "Tencent WXG",
+              "Shanghai AI Lab",
+              "Professor Junxian He",
+              "Zifei Shan",
+              "Prof. Yu Cheng",
+              "Natural Language Processing",
+              "Machine Learning",
+              "Hong Kong University of Science and Technology",
+              "Shanghai Jiao Tong University",
+          ]:
+              assert fact in about, "Missing in about: " + fact
+          for wrong in ["Your Name", "Your Sidebar Name", "GitHub University", "Paper Title Number", "Red Brick University"]:
+              assert wrong not in about, "Template placeholder found: " + wrong
+              assert wrong not in pubs, "Template placeholder found: " + wrong
+          detail_pages = list((root / "publication").glob("*/index.html"))
+          assert len(detail_pages) == 6, "Expected 6 publication pages, got %d" % len(detail_pages)
+          expected = [
+              (r"Published in\s*<i>Arxiv</i>,\s*2025", 2),
+              (r"Published in\s*<i>EMNLP 2024</i>,\s*2024", 1),
+              (r"Published in\s*<i>ICML 2024</i>,\s*2024", 1),
+              (r"Published in\s*<i>NeurIPS 2023</i>,\s*2023", 2),
+          ]
+          combined = pubs + "".join(p.read_text() for p in detail_pages)
+          for pattern, count in expected:
+              found = len(re.findall(pattern, combined))
+              assert found >= count, "Year/venue mismatch for " + pattern + ": " + str(found)
+          assert 'class="author__avatar"' not in about, "Unexpected avatar rendered"
+          print("All content checks passed")
+          PY
